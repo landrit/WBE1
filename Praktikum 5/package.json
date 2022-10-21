@@ -1,0 +1,14 @@
+{
+  "name": "paraktikum5",
+  "version": "1.0.0",
+  "description": "Praktikum 5 Description",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Landrit Ahmeti",
+  "license": "MIT",
+  "devDependencies": {
+    "jasmine": "^4.4.0"
+  }
+}
