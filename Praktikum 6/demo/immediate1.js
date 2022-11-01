@@ -1,8 +1,10 @@
 // timeout_vs_immediate.js
 setTimeout(() => {
-  console.log('timeout')
+  console.log("timeout")
 }, 0)
 
 setImmediate(() => {
-  console.log('immediate')
+  console.log("immediate")
 })
+
+// Es kommt drauf an, wann der Event Loop die Callbacks abarbeitet.
