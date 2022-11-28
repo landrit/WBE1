@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vier gewinnt</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      let state = {
+        board: undefined,
+        next: "b",
+        previous: "r",
+        winner: "",
+      };
+
+      const SERVICE = "http://localhost:3000/api/data/c4state?api-key=c4game";
+
+      //  Initialize game
+      //
+      function initGame() {
+        const board = showBoard();
+        attachEventHandler(board);
+      }
+
+      //  Show board
+      //
+      function showBoard() {
+        const board = document.querySelector(".board");
+
+        // first remove all fields
+        while (board.firstChild) {
+          board.removeChild(board.firstChild);
+        }
+
+        // abort if state undefined
+        if (!state || !state.board) return board;
+
+        // show state
+        const rows = state.board.length;
+        const fields = state.board[0].length;
+
+        // create rows and cells
+        for (let x = 0; x < fields; x++) {
+          const row = createElement("div", { id: x, class: "row" });
+          for (let y = 0; y < rows; y++) {
+            const field = createElement("div", { id: y, class: "field" });
+
+            // add player field if present
+            if (state.board[y][x] === "b") {
+              field.classList.add("piece");
+              field.classList.add("blue");
+            } else if (state.board[y][x] === "r") {
+              field.classList.add("piece");
+              field.classList.add("red");
+            }
+
+            row.appendChild(field);
+          }
+          board.appendChild(row);
+        }
+
+        return board;
+      }
+
+      function connect4Winner() {
+        const rows = state.board.length;
+        const columns = state.board[0].length;
+
+        for (let row = 0; row < rows; row++) {
+          for (let column = 0; column < columns; column++) {
+            if (fieldIsWinner(column, row)) {
+              return fieldIsWinner(column, row);
+            }
+          }
+        }
+
+        function fieldIsWinner(column, row) {
+          //check in all four directions
+          return (
+            fieldIsWinnerVertical(column, row) ||
+            fieldIsWinnerHorizontal(column, row) ||
+            fieldIsWinnerDiagonalLeft(column, row) ||
+            fieldIsWinnerDiagonalRight(column, row)
+          );
+
+          function fieldIsWinnerVertical(col, row) {
+            let fields = "";
+            for (let i = -3; i < 7; i++) {
+              if (state.board[row + i]) {
+                fields += state.board[row + i][col];
+              }
+            }
+            if (fields.includes("rrrr")) {
+              return "r";
+            } else if (fields.includes("bbbb")) {
+              return "b";
+            }
+          }
+
+          function fieldIsWinnerHorizontal(col, row) {
+            let fields = "";
+            for (let i = -3; i < 7; i++) {
+              if (state.board[row][col + i]) {
+                fields += state.board[row][col + i];
+              }
+            }
+            if (fields.includes("rrrr")) {
+              return "r";
+            } else if (fields.includes("bbbb")) {
+              return "b";
+            }
+          }
+
+          function fieldIsWinnerDiagonalLeft(col, row) {
+            let fields = "";
+            for (let i = 3; i > 0; i--) {
+              if (state.board[row - i] && state.board[row - i][col - i]) {
+                fields += state.board[row - i][col - i];
+              }
+            }
+            fields += state.board[row][col];
+            for (let i = 1; i <= 3; i++) {
+              if (state.board[row + i] && state.board[row + i][col + i]) {
+                fields += state.board[row + i][col + i];
+              }
+            }
+            if (fields.includes("rrrr")) {
+              return "r";
+            } else if (fields.includes("bbbb")) {
+              return "b";
+            }
+          }
+
+          function fieldIsWinnerDiagonalRight(col, row) {
+            let fields = "";
+            for (let i = 3; i > 0; i--) {
+              if (state.board[row - i] && state.board[row - i][col + i]) {
+                fields += state.board[row - i][col + i];
+              }
+            }
+            fields += state.board[row][col];
+            for (let i = 1; i <= 3; i++) {
+              if (state.board[row + i] && state.board[row + i][col - i]) {
+                fields += state.board[row + i][col - i];
+              }
+            }
+            if (fields.includes("rrrr")) {
+              return "r";
+            } else if (fields.includes("bbbb")) {
+              return "b";
+            }
+          }
+        }
+      }
+
+      //  Helper function for DOM manipulation
+      //
+      function createElement(type, attrs, ...children) {
+        const node = document.createElement(type);
+        for (a in attrs) {
+          node.setAttribute(a, attrs[a]);
+        }
+        for (let child of children) {
+          if (typeof child != "string") node.appendChild(child);
+          else node.appendChild(document.createTextNode(child));
+        }
+        return node;
+      }
+
+      //  Attach event handler to board
+      //
+      function attachEventHandler(board) {
+        board.addEventListener("click", (e) => {
+          if (state.winner) return;
+          const field = e.target;
+          const row = field.parentElement;
+          const x = parseInt(row.getAttribute("id"));
+          for (let y = state.board.length - 1; y >= 0; y--) {
+            if (state.board[y][x] == "") {
+              state.board[y][x] = state.next;
+              state.next = state.previous;
+              state.previous = state.board[y][x];
+              break;
+            }
+          }
+          showBoard();
+          state.winner = connect4Winner();
+        });
+      }
+
+      //  Get current state from server and re-draw board
+      //
+      async function loadState() {
+        fetch(SERVICE)
+          .then((res) => res.json())
+          .then((val) => (state = val))
+          .then(() => showBoard());
+      }
+
+      //  Put current state to server
+      //
+      function saveState() {
+        fetch(SERVICE, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(state),
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <div class="board"></div>
+    <div class="controls">
+      <button onclick="loadState()">Load</button>
+      <button onclick="saveState()">Save</button>
+    </div>
+    <script>
+      initGame();
+    </script>
+  </body>
+</html>
