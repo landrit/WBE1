@@ -1,67 +1,95 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Vier gewinnt</title>
 
   <style>
-
     div {
       box-sizing: border-box;
     }
 
     .board {
-      width: 84vw;
+      width: 35vw;
+      height: 100%;
       margin: auto;
       outline: 1px solid black;
-   }
+      display: flex;
+      flex-direction: column;
+    }
 
-    .board .field {
+    .row {
+      height: 5vw;
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      flex-grow: 1;
+      flex-wrap: nowrap;
+      justify-content: space-evenly;
+    }
+
+    .field {
       border: 1px solid black;
-      width: 12vw;
-      height: 12vw;
-      display: none;
+      height: 100%;
+      width: 100%;
     }
 
-    .board .field:first-child {
-      display: block;
-    }
-
-    .board .field .piece {
-      width: 10vw;
-      height: 10vw;
+    .piece {
       border-radius: 50%;
-      margin: 1vw;
     }
-    .board .field .blue {
+
+    .blue {
       background-color: blue;
     }
-    .board .field .red {
+
+    .red {
       background-color: red;
     }
-
   </style>
-
-
 </head>
+
 <body>
+  <script>
+    function createElement(type, attrs, ...children) {
+      let node = document.createElement(type);
+      for (a in attrs) {
+        node.setAttribute(a, attrs[a]);
+      }
+      for (let child of children) {
+        if (typeof child != "string") node.appendChild(child);
+        else node.appendChild(document.createTextNode(child));
+      }
+      return node;
+    }
 
-  <div class="board">
+    function randomBoolean(probability) {
+      return Math.random() < probability;
+    }
 
-    <div class="field"><div class="blue piece"></div></div>
-    <div class="field"></div>
-    <div class="field"></div>
-    <div class="field"></div>
-    <div class="field"></div>
-    <div class="field"></div>
-    <div class="field"><div class="red piece"></div></div>
-    <div class="field"></div>
-    <div class="field"></div>
-    <div class="field"></div>
-    <div class="field"></div>
-    <div class="field"></div>
+    function showBoard() {
+      const board = createElement("div", { class: "board" });
+      for (let y = 0; y < 6; y++) {
+        const row = createElement("div", { class: "row" });
+        for (let x = 0; x < 7; x++) {
+          const field = createElement("div", { class: "field" });
+          if (randomBoolean(0.1)) {
+            field.classList.add("piece");
+            if (randomBoolean(0.5)) {
+              field.classList.add("blue");
+            } else {
+              field.classList.add("red");
+            }
+          }
+          row.appendChild(field);
+        }
+        board.appendChild(row);
+      }
+      document.body.appendChild(board);
+    }
 
-  </div>
-
+    showBoard();
+  </script>
 </body>
+
 </html>
